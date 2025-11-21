@@ -31,12 +31,12 @@ USE_PEFT="--use_peft"
 vllm_gpu_memory_utilization=0.5
 vllm_mode='colocate'
 use_vllm="--use_vllm"
-logging_steps=2
+logging_steps=10
 load_in_4bit="--load_in_4bit"
 use_liger_kernel="--use_liger_kernel"
 num_train_epochs=1
 save_total_limit=2
-save_steps=10
+save_steps=50
 save_strategy="steps"
 ########
 
