@@ -21,7 +21,7 @@ MAX_COMPLETION_LENGTH=1024
 # ------------------------------
 # 基础模型路径 (注意：Windows路径使用正斜杠或双反斜杠)
 #MODEL_PATH="/mnt/d/modelscope/Qwen3-0.6B-GPTQ-Int8"
-MODEL_PATH="/mnt/d/modelscope/Qwen3-0.6B"
+MODEL_PATH="/root/autodl-tmp/modelscope/Qwen3-0.6B"
 # 计算精度 (bfloat16/float16/float32)
 DTYPE="bfloat16"
 # 是否使用PEFT参数高效微调
@@ -135,13 +135,7 @@ cd "$PROJECT_ROOT" && PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python src/training
     --epsilon "$EPSILON" \
     --epsilon_high "$EPSILON_HIGH" \
     --beta "$BETA" \
-    --reward_funcs "src.rewards.schema_rewards.table_reward" \
-    --reward_funcs "src.rewards.schema_rewards.table_penalty" \
-    --reward_funcs "src.rewards.schema_rewards.column_reward" \
-    --reward_funcs "src.rewards.schema_rewards.column_penalty" \
-    --reward_funcs "src.rewards.format_rewards.think_tag_penalty" \
-    --reward_funcs "src.rewards.format_rewards.valid_json_reward" \
-    --reward_funcs "src.rewards.base_rewards.get_soft_overlong_punishment_medium" \
+    --reward_funcs "src.rewards.schema_rewards.table_reward" "src.rewards.schema_rewards.table_penalty" "src.rewards.schema_rewards.column_reward" "src.rewards.schema_rewards.column_penalty" "src.rewards.format_rewards.think_tag_penalty" "src.rewards.format_rewards.valid_json_reward" "src.rewards.base_rewards.get_soft_overlong_punishment_medium" \
     --num_iterations "$NUM_ITERATIONS" \
     --loss_type "$LOSS_TYPE" \
     --importance_sampling_level "$SAMPLING_LEVEL" \
