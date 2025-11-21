@@ -11,12 +11,18 @@ def _extract_tables_and_columns(schema: List[Dict[str, Any]]) -> tuple[set, set]
         table_name = item.get("table_name")
         if table_name:
             # 将表名转换为小写
-            tables.add(table_name.lower())
+            try:
+                tables.add(table_name.lower())
+            except Exception as e:
+                pass
 
         cols = item.get("columns", [])
         if isinstance(cols, list):
             # 将所有列名转换为小写
-            columns.update(col.lower() for col in cols)
+            try:
+                columns.update(col.lower() for col in cols)
+            except Exception as e:
+                pass
     return tables, columns
 
 
