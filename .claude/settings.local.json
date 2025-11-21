@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(src/__init__.py)",
+      "Bash(src/training/__init__.py)",
+      "Bash(src/rewards/__init__.py)",
+      "Bash(src/data/__init__.py)",
+      "Bash(src/utils/__init__.py)",
+      "Bash(rmdir:*)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(tree:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

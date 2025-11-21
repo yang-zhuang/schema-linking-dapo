@@ -1,0 +1,62 @@
+# DAPO Training Configuration
+# DAPO训练配置文件
+
+# Data Configuration
+data:
+  train_file: "../data/train.jsonl"
+  max_prompt_length: 2048
+  max_completion_length: 1024
+
+# Model Configuration
+model:
+  base_model: "/mnt/d/modelscope/Qwen3-0.6B"
+  dtype: "bfloat16"
+  use_peft: true
+  load_in_4bit: true
+
+# Training Configuration
+training:
+  num_iterations: 2
+  num_generations: 4
+  steps_per_generation: 4
+  gradient_accumulation_steps: 2
+  per_device_train_batch_size: 2
+  learning_rate: 1e-5
+
+  # DAPO Specific Parameters
+  loss_type: "dapo"
+  importance_sampling_level: "token"
+  epsilon: 0.2
+  epsilon_high: 0.28
+  beta: 0.0
+
+# VLLM Configuration
+vllm:
+  mode: "colocate"
+  gpu_memory_utilization: 0.5
+  enabled: true
+
+# Logging and Saving
+logging:
+  logging_steps: 2
+  save_strategy: "steps"
+  save_steps: 10
+  save_total_limit: 2
+  num_train_epochs: 1
+  report_to: "tensorboard"
+  log_completions: true
+
+# Output Configuration
+output:
+  output_dir: "../outputs/dapo-Qwen3-0.6B"
+
+# Reward Functions Configuration
+rewards:
+  enabled:
+    - "rewards.schema_rewards.table_reward"
+    - "rewards.schema_rewards.table_penalty"
+    - "rewards.schema_rewards.column_reward"
+    - "rewards.schema_rewards.column_penalty"
+    - "rewards.format_rewards.think_tag_penalty"
+    - "rewards.format_rewards.valid_json_reward"
+    - "rewards.base_rewards.get_soft_overlong_punishment_medium"
