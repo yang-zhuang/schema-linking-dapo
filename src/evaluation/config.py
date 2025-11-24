@@ -5,7 +5,7 @@ Configuration constants for evaluation system
 # vLLM service configuration
 DEFAULT_API_URL = "http://localhost:8000/v1"
 DEFAULT_API_KEY = "token-abc123"  # vLLM无需验证，仅满足SDK格式要求
-DEFAULT_MODEL_NAME = "dapo-Qwen3-0.6B" # "Qwen3-0.6B"、"dapo-Qwen3-0.6B"
+DEFAULT_MODEL_NAME = "Qwen3-0.6B" # "Qwen3-0.6B"、"dapo-Qwen3-0.6B"
 
 # Data path configuration
 DEFAULT_INPUT_CSV_PATH = "../data/val_prompt2.csv"
