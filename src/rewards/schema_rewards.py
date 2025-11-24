@@ -8,7 +8,11 @@ def _extract_tables_and_columns(schema: List[Dict[str, Any]]) -> tuple[set, set]
     tables = set()
     columns = set()
     for item in schema:
-        table_name = item.get("table_name")
+        try:
+            table_name = item.get("table_name")
+        except Exception as e:
+            table_name = None
+
         if table_name:
             # 将表名转换为小写
             try:
@@ -16,7 +20,11 @@ def _extract_tables_and_columns(schema: List[Dict[str, Any]]) -> tuple[set, set]
             except Exception as e:
                 pass
 
-        cols = item.get("columns", [])
+        try:
+            cols = item.get("columns", [])
+        except Exception as e:
+            cols = None
+
         if isinstance(cols, list):
             # 将所有列名转换为小写
             try:

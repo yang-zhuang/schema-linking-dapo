@@ -8,7 +8,7 @@ def get_soft_overlong_punishment(max_completion_len: int, soft_punish_cache: int
     分数设计：
     - 范围：-1.0 到 0.0
     - 基于完成文本长度与最大长度的关系进行惩罚
-    - 计算公式（参考DAPO论文Eq. (13)）：
+    - 计算公式（参考DAPO论文: https://arxiv.org/abs/2503.14476 Eq. (13)）：
         * 长度 ≤ (最大长度 - 缓存长度)：0.0（无惩罚）
         * (最大长度 - 缓存长度) < 长度 ≤ 最大长度：-(当前长度 - (最大长度 - 缓存长度)) / 缓存长度
         * 长度 > 最大长度：-1.0（最大惩罚）

@@ -114,10 +114,7 @@ dmypy.json
 .pyre/
 
 # Model outputs and checkpoints
-outputs/
-checkpoints/
 wandb/
-tensorboard_logs/
 
 # Data files
 *.csv
@@ -151,3 +148,17 @@ logs/
 
 *zone*
 *Zone*
+outputs.zip
+
+outputs/dapo-Qwen3-0.6B/checkpoint-17050
+outputs/dapo-Qwen3-0.6B/adapter_config.json
+outputs/dapo-Qwen3-0.6B/adapter_model.safetensors
+outputs/dapo-Qwen3-0.6B/added_tokens.json
+outputs/dapo-Qwen3-0.6B/chat_template.jinja
+outputs/dapo-Qwen3-0.6B/merges.txt
+outputs/dapo-Qwen3-0.6B/README.md
+outputs/dapo-Qwen3-0.6B/special_tokens_map.json
+outputs/dapo-Qwen3-0.6B/tokenizer.json
+outputs/dapo-Qwen3-0.6B/tokenizer_config.json
+outputs/dapo-Qwen3-0.6B/training_args.bin
+outputs/dapo-Qwen3-0.6B/vocab.json

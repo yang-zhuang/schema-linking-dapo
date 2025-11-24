@@ -3,7 +3,7 @@
 [![Python 版本](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://python.org)
 [![许可证](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-基于 **DAPO**（直接优势策略优化）算法的 Text-to-SQL 模式选择强化学习方法。本项目基于 SCHEMA-R1 论文，实现了改进的训练方法和自定义奖励函数。
+基于 **DAPO** 算法的 Text-to-SQL 模式选择强化学习方法。本项目基于 SCHEMA-R1 论文，实现了改进的训练方法和自定义奖励函数，包含完整的模型评估系统。
 
 ## 🎯 项目概述
 
@@ -13,38 +13,94 @@
 - **DAPO 算法**：实现直接优势策略优化，提供更好的训练稳定性
 - **自定义奖励函数**：多目标奖励系统用于模式选择
 - **高效训练**：LoRA 参数高效微调配合 VLLM 加速
-- **全面评估**：基于精确率/召回率的表和列选择评估指标
+- **全面评估系统**：模块化的评估系统，支持多种指标和对比分析
+- **中英文文档**：完整的中文技术文档和使用指南
 
 ## 🏗️ 项目结构
 
 ```
 schema-linking-dapo/
+├── README.md                    # 项目主文档（本文件）
 ├── src/                          # 源代码
-│   ├── training/                 # 训练模块
-│   │   └── grpo.py               # GRPO 训练器
-│   ├── rewards/                  # 奖励函数
+│   ├── README.md                # 源码详细文档
+│   ├── __init__.py              # 包初始化文件
+│   ├── training/                # 训练模块
+│   │   └── grpo.py             # GRPO 训练器
+│   ├── rewards/                # 奖励函数模块
 │   │   ├── schema_rewards.py     # 模式选择奖励
 │   │   ├── format_rewards.py     # 格式验证奖励
 │   │   └── base_rewards.py       # 基础工具奖励
-│   ├── data/                     # 数据处理
+│   ├── data/                   # 数据处理模块
 │   │   └── data_processor.py     # 训练数据准备
-│   └── utils/                    # 工具函数
+│   ├── utils/                  # 工具函数模块
+│   └── evaluation/            # 评估系统 🆕
+│       ├── README.md            # 评估系统详细文档
+│       ├── __init__.py          # 评估模块导出
+│       ├── config.py            # 评估配置
+│       ├── utils.py             # 评估工具函数
+│       ├── data_loader.py       # 评估数据加载
+│       ├── model_client.py      # vLLM模型交互
+│       ├── metrics_calculator.py  # 评估指标计算
+│       ├── file_handler.py      # 评估结果保存
+│       └── evaluate_qwen_model.py # 主评估逻辑
 ├── configs/                      # 配置文件
 │   └── training_config.yaml      # 训练参数
 ├── scripts/                      # 执行脚本
-│   └── train_dapo_lora.sh        # 训练脚本
+│   ├── train_dapo_lora.sh        # 训练脚本
+│   ├── start_vllm.sh            # vLLM服务启动脚本 🆕
+│   └── run_evaluation.py        # 评估执行脚本 🆕
 ├── data/                         # 数据集
-│   ├── train.jsonl               # 训练数据
-│   └── val.jsonl                 # 验证数据
-├── outputs/                      # 模型输出
+│   ├── training_prompt2.csv     # 训练数据 (8,539条)
+│   └── val_prompt2.csv         # 验证数据 (1,004条)
+├── outputs/                      # 模型输出和评估结果
+│   ├── daapo-Qwen3-0.6B/        # 训练后的模型
+│   └── evaluation/            # 评估结果 🆕
 ├── requirements.txt              # 依赖项
 ├── setup.py                      # 安装配置
-└── README.md                     # 项目文档
+└── README_evaluation_simple.md    # 评估系统简化文档
 ```
+
+## 📊 评估系统 🆕
+
+项目包含完整的模型评估系统，支持基于 SCHEMA-R1 标准的多维度性能分析：
+
+### 评估指标
+- **EM (Exact Match)**: 精确匹配，预测与真实标签完全一致
+- **Filtered Accuracy**: 过滤准确率，预测的准确性（精确率）
+- **Recall**: 召回率，真实标签的覆盖率
+
+### 评估结果对比
+
+| 模型 | 表选择 EM | 列选择 EM | 表选择 Recall | 列选择 Recall |
+|------|-----------|-----------|---------------|---------------|
+| **Qwen2.5-0.5B (SCHEMA-R1)** | 55.38% | 13.24% | 75.60% | 44.02% |
+| **Qwen3-0.6B (基础)** | 42.23% | 19.02% | 55.68% | 44.76% |
+| **Qwen3-0.6B + DAPO** | 70.82% | 30.48% | **92.12%** | **72.52%** |
+
+### 🎉 性能提升
+- **表选择**: EM 提升 28.59%，Recall 提升 36.44%
+- **列选择**: EM 提升 11.46%，Recall 提升 27.76%
+- **超越基线**: 在表选择任务上显著优于 SCHEMA-R1 基线
+
+### 📖 快速评估
+```bash
+# 1. 启动vLLM服务（包含LoRA权重）
+bash scripts/start_vllm.sh
+
+# 2. 运行评估
+python scripts/run_evaluation.py --model_name "dapo-Qwen3-0.6B"
+
+# 3. 评估基础模型（对比）
+# 修改 vllm 脚本中的 LoRA 配置
+python scripts/run_evaluation.py --model_name "Qwen3-0.6B"
+```
+
+详细评估文档请参见：
+- [📖 评估系统详细指南](src/evaluation/README.md)
 
 ## 🚀 快速开始
 
-### 1. 安装
+### 1. 环境准备
 
 ```bash
 # 克隆仓库
@@ -60,62 +116,107 @@ pip install -e .
 
 ### 2. 数据准备
 
-下载 SCHEMA-R1 数据集：
+使用 SCHEMA-R1 数据集（8,539条训练样本）：
 ```bash
-# 下载训练和验证数据到 data/ 目录
-# 来源：https://github.com/hongWin/Schema-R1/tree/main/src/GRPO_data
-# 需要的文件：training_prompt2.csv, val_prompt2.csv
-
+# 下载训练和验证数据
+# 来源: https://arxiv.org/pdf/2506.11986 (SCHEMA-R1论文)
 # 将下载的文件放到 data/ 目录：
-# data/training_prompt2.csv
-# data/val_prompt2.csv
+# data/training_prompt2.csv (训练数据)
+# data/val_prompt2.csv (验证数据, 1,004条)
 
-# 处理原始数据，生成训练数据
+# 处理数据，生成训练数据
 python src/data/data_processor.py
 ```
 
-### 3. 训练
+### 3. 模型训练
 
 ```bash
 # 给训练脚本添加执行权限
-chmod +x scripts/train_dapo_lora.sh
+chmod +x scripts/train_dalo_lora.sh
 
-# 运行训练（脚本会自动处理路径）
+# 运行训练（基于8,539条样本）
 ./scripts/train_dapo_lora.sh
 ```
 
-或者自定义训练参数：
+### 4. 模型评估
+
 ```bash
-# 编辑配置文件
-vim configs/training_config.yaml
+# 启动vLLM服务（包含训练后的LoRA权重）
+bash scripts/start_vllm.sh
 
-# 然后运行训练
-./scripts/train_dapo_lora.sh
+# 运行完整评估
+python scripts/run_evaluation.py --model_name "dapo-Qwen3-0.6B"
+
+# 调试模式（只处理少量样本）
+python scripts/run_evaluation.py --debug --debug_samples 50
 ```
 
-**注意**：训练脚本会自动检测项目根目录并使用正确的路径，无需切换目录。
+## 🏆 奖励函数体系 🆕
 
-## 🧠 奖励函数
+项目实现了与 SCHEMA-R1 不同的奖励函数设计：
 
-项目实现了全面的奖励系统：
+### 当前项目奖励函数
 
-### 模式奖励 (`src/rewards/schema_rewards.py`)
-- **表奖励**：基于精确率的正确表选择奖励
-- **表惩罚**：对错误表选择的惩罚
-- **列奖励**：基于精确率的正确列选择奖励
-- **列惩罚**：对错误列选择的惩罚
+#### Schema Rewards (模式奖励)
+- **表选择奖励**: `正确预测的表数量 / 真实表总数` (0.0-1.0)
+- **表选择惩罚**: `-(错误表数量 / 生成表总数)` (-1.0-0.0)
+- **列选择奖励**: `正确预测的列数量 / 真实列总数` (0.0-1.0)
+- **列选择惩罚**: `-(错误列数量 / 生成列总数)` (-1.0-0.0)
 
-### 格式奖励 (`src/rewards/format_rewards.py`)
-- **思考标签惩罚**：确保正确使用 `</think>` 标签
-- **有效 JSON 奖励**：验证 JSON 输出格式
+#### Format Rewards (格式奖励)
+- **思考标签惩罚**: 检查 `思考标签` 完整性 (0.0/-1.0)
+- **JSON格式验证**: JSON解析验证 (1.0/-1.0)
 
-### 基础奖励 (`src/rewards/base_rewards.py`)
-- **长度惩罚**：防止过长的输出
+#### Base Rewards (基础奖励)
+- **软长度惩罚**: 基于DAPO论文的软边界惩罚机制
+- **参数**: 最大长度=1024, 软惩罚缓存=128
+
+### SCHEMA-R1 奖励函数
+
+#### Format Reward (格式奖励)
+- 格式成功 + 标签检查（双验证机制）
+- 硬边界长度控制
+
+#### Reasoning Length Reward (推理长度奖励)
+- 非连续二元奖励（0或1）
+- 预设长度边界控制
+
+#### Schema Linking Reward (模式链接奖励)
+- 复杂数学公式计算（Rtmax/Rcmax权重机制）
+- 分层奖励：表预测 > 列预测权重
+
+### 🎯 奖励函数对比
+
+| 特性 | SCHEMA-R1 | 当前项目 |
+|------|-----------|----------|
+| **数据格式** | 纯文本 | JSON结构化 |
+| **格式检查** | 正则匹配 | JSON解析验证 |
+| **长度控制** | 硬边界 | 软边界 |
+| **表列权重** | Rtmax > Rcmax | 独立奖励/惩罚 |
+| **实现复杂度** | 数学公式复杂 | 简单比例计算 |
+
+## 🛠️ 技术架构
+
+### 核心框架
+- **PyTorch**: 深度学习框架
+- **TRL**: Transformers Reinforcement Learning
+- **vLLM**: 高性能推理引擎
+- **Transformers**: HuggingFace 模型库
+
+### 训练技术
+- **DAPO**: 直接优势策略优化
+- **GRPO**: 通用相对策略优化
+- **LoRA**: 低秩适应参数微调
+- **重要性采样**: 训练优化技术
+
+### 推理加速
+- **VLLM**: 共置模式推理
+- **4-bit量化**: 内存优化
+- **并发处理**: 批量推理加速
 
 ## ⚙️ 配置
 
-训练配置通过 `configs/training_config.yaml` 管理：
-
+### 训练配置 (`configs/training_config.yaml`)
 ```yaml
 # 关键参数
 training:
@@ -129,52 +230,68 @@ model:
   base_model: "/mnt/d/modelscope/Qwen3-0.6B"
   use_peft: true
   load_in_4bit: true
+
+# VLLM 推理配置
+vllm:
+  enabled: true
+  mode: "colocate"
+  gpu_memory_utilization: 0.5
 ```
 
-## 📊 模型架构
+### 评估配置
+- API 服务配置
+- 多指标评估系统
+- 报告生成和可视化
+- 批量评估支持
 
-- **基础模型**：Qwen3-0.6B（或兼容模型）
-- **训练方法**：DAPO（直接优势策略优化）
-- **高效微调**：LoRA（低秩适应）
-- **推理加速**：VLLM 共置模式
-- **量化支持**：4-bit 量化
+## 📈 性能成果
 
-## 🔧 技术细节
+### 训练数据
+- **数据集**: SCHEMA-R1 (8,539条样本)
+- **格式**: JSON结构化输出
+- **无需SFT**: 直接DAPO训练
 
-### DAPO 算法
-项目实现了 DAPO 的以下关键组件：
-- **Token 级重要性采样**
-- **双 epsilon 裁剪（ε, ε_high）**
-- **优势归一化**
+### 性能指标
+- **显著提升**: 相比基础模型，DAPO微调后性能大幅提升
+- **超越基线**: 在多项指标上超越SCHEMA-R1论文结果
+- **高效推理**: LoRA微调 + VLLM推理加速
 
-### 训练流程
-1. **数据处理**：将 CSV 转换为带适当提示的 JSONL 格式
-2. **模型训练**：使用自定义奖励函数的 GRPO 训练器
-3. **评估**：模式选择性能的多指标评估
+### 实际应用价值
+- **数据库查询**: 准确的表和列选择
+- **效率提升**: 减少不必要的数据检索
+- **成本降低**: 精确的SQL查询生成
 
-## 📈 性能
+## 🔧 开发指南
 
-模型在模式选择任务上取得了强大的性能：
-- **高精确率**的表和列选择
-- **稳定训练**的 DAPO 算法
-- **高效推理**的 LoRA 和 VLLM
-
-## 🛠️ 开发指南
-
-### 添加新的奖励函数
+### 评估系统扩展
 ```python
-# 在 src/rewards/ 目录下创建新的奖励函数
-# 在训练脚本中添加引用路径
---reward_funcs "src.rewards.your_rewards.your_reward_function"
+# 评估系统位于 src/evaluation/ 目录
+# 支持多种评估模式和自定义指标
+
+from src.evaluation import MetricsCalculator, EvaluationRunner
+
+# 添加自定义评估指标
+calculator = MetricsCalculator(
+    weights={'table_f1': 0.4, 'column_f1': 0.4}
+)
+
+# 运行评估
+runner = EvaluationRunner(config)
+results = runner.run_evaluation()
 ```
 
-### 调整训练参数
-编辑 `configs/training_config.yaml` 文件来调整：
-- 学习率和批大小
-- DAPO 特定参数（epsilon, beta 等）
-- 模型路径和量化设置
+### 奖励函数扩展
+```python
+# 在 src/rewards/ 目录下添加新奖励函数
+def custom_reward(completions, **kwargs):
+    # 自定义奖励逻辑
+    return [0.5 for _ in completions]
 
-## 🤝 贡献
+# 在训练配置中引用
+--reward_funcs "src.rewards.custom.custom_reward"
+```
+
+## 🤝 贡献指南
 
 我们欢迎贡献！请遵循以下步骤：
 
@@ -184,18 +301,23 @@ model:
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开 Pull Request
 
-## 📄 引用
+### 开发规范
+- 代码模块化设计
+- 完整的中文文档
+- 单元测试覆盖
+- 类型注解支持
 
-如果您使用此代码，请引用我们的工作和原始 SCHEMA-R1 论文：
+## 📚 参考文献
 
-```bibtex
-@article{schema-r1,
-  title={SCHEMA-R1: A Reasoning Training Approach for Schema Linking in Text-to-SQL Task},
-  author={...},
-  journal={...},
-  year={2024}
-}
-```
+### 论文资料
+- **DAPO论文**: [DAPO: An Open-Source LLM Reinforcement Learning System at Scale](https://arxiv.org/abs/2503.14476)
+- **SCHEMA-R1论文**: [A Reasoning Training Approach for Schema Linking in Text-to-SQL Task](https://arxiv.org/pdf/2506.11986)
+- **GRPO论文**: [Generalized Relative Policy Optimization](https://arxiv.org/abs/2402.03300)
+
+### 框架文档
+- [TRL文档](https://huggingface.co/docs/trl)
+- [vLLM文档](https://vllm.readthedocs.io/)
+- [Transformers文档](https://huggingface.co/docs/transformers)
 
 ## 📜 许可证
 
@@ -203,12 +325,18 @@ model:
 
 ## 🙏 致谢
 
-- SCHEMA-R1 论文作者提供的原始数据集和方法
-- TRL（Transformers Reinforcement Learning）团队的训练框架
-- VLLM 团队提供的高效推理加速
+- **SCHEMA-R1论文作者**: 提供的原始数据集和评估方法
+- **TRL团队**: 提供的强化学习训练框架
+- **VLLM团队**: 提供的高效推理加速技术
+- **开源社区**: 在算法和工具链方面的贡献
 
 ## 🔗 相关链接
 
-- [SCHEMA-R1 原始项目](https://github.com/hongWin/Schema-R1)
-- [TRL 文档](https://huggingface.co/docs/trl)
-- [VLLM 项目](https://github.com/vllm-project/vllm)
+- **SCHEMA-R1项目**: [GitHub Repository](https://github.com/hongWin/Schema-R1)
+- **TRL框架**: [HuggingFace TRL](https://huggingface.co/docs/trl)
+- **VLLM引擎**: [VLLM Project](https://github.com/vllm-project/vllm)
+- **评估文档**: [评估系统详细指南](src/evaluation/README.md)
+
+---
+
+*最后更新: 2024年11月*
